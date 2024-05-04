@@ -233,8 +233,6 @@ input {
 	border-radius: 3px;
 	background: none;
 
-	color: #000;
-
 	cursor: pointer;
 
 	aspect-ratio: 1 / 1;
@@ -242,10 +240,12 @@ input {
 
 .codepoint__insert {
 	border: 1px solid #36F;
+	color: #36F;
 }
 
 .codepoint__delete {
 	border: 1px solid #F33;
+	color: #F33;
 }
 
 p {
