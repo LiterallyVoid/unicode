@@ -54,6 +54,22 @@ input {
 }
 
 
+.table-footer{
+	grid-column: 1 / -1;
+
+	display: grid;
+	grid-template-columns: subgrid;
+}
+
+.table-footer > div {
+	padding: 0.6rem 0.3rem;
+
+	color: #666;
+	font-size: 70%;
+
+	text-align: center;
+}
+
 .grapheme {
 	grid-column: 1 / -1;
 

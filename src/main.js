@@ -237,6 +237,15 @@ function render({ value, target, onDeleteRange }) {
 
 		target.appendChild(grapheme_element);
 	}
+
+	const footer = templates.table_footer.content.cloneNode(true);
+
+	footer.querySelector("[data-slot=utf-8-bytes]").textContent = utf_8_index;
+	footer.querySelector("[data-slot=utf-16-units]").textContent = utf_16_index;
+	footer.querySelector("[data-slot=codepoints]").textContent = codepoint_index;
+	footer.querySelector("[data-slot=graphemes]").textContent = grapheme_index;
+
+	target.appendChild(footer);
 }
 
 function renderAll() {

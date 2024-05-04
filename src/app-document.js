@@ -29,6 +29,7 @@ export const visualization = query("#visualization");
 
 export const templates = {
 	table_header: query("template#table-header"),
+	table_footer: query("template#table-footer"),
 	grapheme: query("template#grapheme"),
 	codepoint: query("template#codepoint"),
 };
