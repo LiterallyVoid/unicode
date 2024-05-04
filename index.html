@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang=en>
+	<head>
+		<meta charset=utf-8>
+		<title>Unicode</title>
+		<style>
+			:root {
+				font: 150%/1 Inter, sans-serif;
+			}
+			.vis {
+				display: grid;
+
+				grid-auto-flow: row;
+
+				grid-template-rows: [utf-8] max-content [utf-16] max-content [codepoint] max-content [grapheme] max-content;
+				grid-auto-columns: max-content;
+
+				gap: 0.25em 0;
+
+				overflow-x: auto;
+			}
+
+			.grapheme {
+				grid-row: 1 / -1;
+
+				display: grid;
+				grid-template-rows: subgrid;
+			}
+
+			.grapheme__codepoints {
+				grid-row: 1 / grapheme;
+
+				display: grid;
+				grid-template-rows: subgrid;
+				grid-auto-columns: 10rem;
+			}
+
+			.grapheme__text {
+				grid-row: grapheme;
+				grid-column: 1;
+
+				font-weight: bold;
+
+				align-self: center;
+				justify-self: stretch;
+
+				text-align: center;
+
+				font-size: 250%;
+			}
+
+			/* Every other grapheme has a shaded background. */
+			.grapheme.grapheme--alternate .grapheme__text {
+				background-color: #EEE;
+			}
+
+			.codepoint {
+				grid-row: 1 / -1;
+
+				display: grid;
+				grid-template-rows: subgrid;
+			}
+
+			.codepoint__utf-8 {
+				grid-row: utf-8;
+			}
+			.codepoint__utf-16 {
+				grid-row: utf-16;
+			}
+
+			.codepoint__utf-8,
+			.codepoint__utf-16 {
+				grid-column: 1 / -1;
+
+				display: flex;
+			}
+
+			.codepoint__utf-8 > span,
+			.codepoint__utf-16 > span {
+				flex: 1;
+				text-align: center;
+
+				font-size: 70%;
+
+				padding: 0.5em 0;
+			}
+
+			/* Every other code unit has a shaded background. */
+			.codepoint__utf-8 > span.code-unit--alternate,
+			.codepoint__utf-16 > span.code-unit--alternate {
+				background-color: #EEE;
+			}
+
+			.codepoint__description {
+				padding: 0.5em;
+			}
+
+			/* Every other codepoint has a shaded background. */
+			.codepoint.codepoint--alternate .codepoint__description {
+				background-color: #EEE;
+			}
+
+			.codepoint__id {
+				grid-row: codepoint-id;
+				grid-column: 1 / -1;
+
+				font-family: monospace;
+
+				/* Set the color for the `U+`-portion of this codepoint ID */
+				color: #888;
+			}
+
+			.codepoint__number {
+				font-family: monospace;
+
+				color: #000;
+			}
+
+			.codepoint__name {
+				grid-row: codepoint-name;
+				grid-column: 1 / -1;
+
+				font-size: 50%;
+			}
+		</style>
+	</head>
+	<body>
+		<template id=grapheme>
+			<div class=grapheme>
+				<div class=grapheme__codepoints data-slot=codepoints>
+				</div>
+
+				<div class=grapheme__text data-slot=text>//?</div>
+			</div>
+		</template>
+
+		<template id=codepoint>
+			<div class=codepoint>
+				<div class=codepoint__utf-8 data-slot=utf-8></div>
+				<div class=codepoint__utf-16 data-slot=utf-16></div>
+				<div class=codepoint__description>
+					<div class=codepoint__id>U+<span class=codepoint__number data-slot=number>FEFF</span></div>
+					<div class=codepoint__name data-slot=name>REPLACEMENT CHARACTER</div>
+				</div>
+			</div>
+		</template>
+
+		<input id=main-text-input value=❤️ />
+
+		<div id=visualization class=vis>
+			<div class=grapheme>
+				<div class=grapheme__codepoints>
+					<div class=codepoint>
+						<div class=utf-8-units>
+							<span>F0</span>
+							<span>8F</span>
+							<span>A0</span>
+						</div>
+						<div class=utf-16-units>
+							<span>D809</span>
+							<span>DFEF</span>
+						</div>
+					</div>
+				</div>
+				<div class=grapheme__character>�</div>
+			</div>
+		</div>
+		<script type=module src=main.js></script>
+	</body>
+</html>
