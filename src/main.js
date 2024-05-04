@@ -55,12 +55,13 @@ function readVarAscii(array) {
 @returns {[number, number]} The parsed number, and how long that number was in bytes.
 */
 function readVarInt(array) {
+	let mult = 1;
 	let number = 0;
 	let length = 0;
 
 	while (true) {
-		number *= 128;
-		number += array[length] & 0x7F;
+		number += (array[length] & 0x7F) * mult;
+		mult *= 128;
 
 		const last = (array[length] & 0x80) == 0;
 		length += 1;
@@ -87,7 +88,7 @@ class Table {
 		console.assert(new TextDecoder().decode(this.as_u8.slice(0, 8)) == magic);
 
 		// Verify version
-		console.assert(this.as_u32[2] == 1);
+		console.assert(this.as_u32[2] == 2);
 
 		this.trie_bytes = new Uint8Array(this.data, this.as_u32[3], this.as_u32[4]);
 		const ages_bytes = new Uint8Array(this.data, this.as_u32[5], this.as_u32[6]);
