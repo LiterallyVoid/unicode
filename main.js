@@ -325,23 +325,31 @@ function render(string, target) {
 			codepoint_element.querySelector("[data-slot=name]").textContent = table?.codepointName?.(number) ?? "(table not loaded)";
 
 			for (const unit of codepointUtf16Units(number)) {
+				const container = document.createElement("div");
 				const unit_element = document.createElement("span")
+				container.appendChild(unit_element);
+
 				if (utf_16_index++ % 2 == 1) {
-					unit_element.classList.add("code-unit--alternate");
+					container.classList.add("code-unit--alternate");
 				}
 
 				unit_element.textContent = unit.toString(16).toUpperCase().padStart(4, "0");
-				codepoint_element.querySelector("[data-slot=utf-16]").appendChild(unit_element);
+
+				codepoint_element.querySelector("[data-slot=utf-16]").appendChild(container);
 			}
 
 			for (const unit of codepointUtf8Units(number)) {
+				const container = document.createElement("div");
 				const unit_element = document.createElement("span")
+				container.appendChild(unit_element);
+
 				if (utf_8_index++ % 2 == 1) {
-					unit_element.classList.add("code-unit--alternate");
+					container.classList.add("code-unit--alternate");
 				}
 
 				unit_element.textContent = unit.toString(16).toUpperCase().padStart(2, "0");
-				codepoint_element.querySelector("[data-slot=utf-8]").appendChild(unit_element);
+
+				codepoint_element.querySelector("[data-slot=utf-8]").appendChild(container);
 			}
 
 			grapheme_element.querySelector("[data-slot=codepoints]").appendChild(codepoint_element);

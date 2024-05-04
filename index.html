@@ -12,82 +12,96 @@
 
 				grid-auto-flow: row;
 
-				grid-template-rows: [utf-8] max-content [utf-16] max-content [codepoint] max-content [grapheme] max-content;
-				grid-auto-columns: max-content;
-
-				gap: 0.25em 0;
+				grid-template-columns: [utf-8] max-content [utf-16] max-content [codepoint] 15em [grapheme] max-content;
+				grid-auto-rows: max-content;
 
 				overflow-x: auto;
 			}
 
 			.grapheme {
-				grid-row: 1 / -1;
+				grid-column: 1 / -1;
 
 				display: grid;
-				grid-template-rows: subgrid;
+				grid-template-columns: subgrid;
 			}
 
 			.grapheme__codepoints {
-				grid-row: 1 / grapheme;
+				/* End before the grapheme column. */
+				grid-column: 1 / grapheme;
 
 				display: grid;
-				grid-template-rows: subgrid;
-				grid-auto-columns: 10rem;
+				grid-template-columns: subgrid;
+				grid-auto-rows: 1fr;
+
+				align-items: stretch;
+				justify-content: stretch;
+			}
+
+			.grapheme__text-container {
+				grid-column: grapheme;
+				grid-row: 1;
+
+				align-self: stretch;
+				justify-self: stretch;
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 
 			.grapheme__text {
-				grid-row: grapheme;
-				grid-column: 1;
-
-				font-weight: bold;
-
-				align-self: center;
-				justify-self: stretch;
-
-				text-align: center;
-
 				font-size: 250%;
 			}
 
 			/* Every other grapheme has a shaded background. */
-			.grapheme.grapheme--alternate .grapheme__text {
+			.grapheme.grapheme--alternate .grapheme__text-container {
 				background-color: #EEE;
 			}
 
 			.codepoint {
-				grid-row: 1 / -1;
+				grid-column: 1 / -1;
 
 				display: grid;
-				grid-template-rows: subgrid;
+				grid-template-columns: subgrid;
 			}
 
 			.codepoint__utf-8 {
-				grid-row: utf-8;
+				grid-column: utf-8;
 			}
 			.codepoint__utf-16 {
-				grid-row: utf-16;
+				grid-column: utf-16;
 			}
 
 			.codepoint__utf-8,
 			.codepoint__utf-16 {
-				grid-column: 1 / -1;
+				grid-row: 1 / -1;
+
+				display: flex;
+				flex-direction: column;
+			}
+
+			.codepoint__utf-8 > div,
+			.codepoint__utf-16 > div {
+				flex: 1;
+
+				font-size: 70%;
+
+				padding: 0 0.2em;
 
 				display: flex;
 			}
 
-			.codepoint__utf-8 > span,
-			.codepoint__utf-16 > span {
-				flex: 1;
-				text-align: center;
+			.codepoint__utf-8 > div > span,
+			.codepoint__utf-16 > div > span {
+				align-self: center;
+				justify-self: center;
 
-				font-size: 70%;
-
-				padding: 0.5em 0;
+				font-family: monospace;
 			}
 
 			/* Every other code unit has a shaded background. */
-			.codepoint__utf-8 > span.code-unit--alternate,
-			.codepoint__utf-16 > span.code-unit--alternate {
+			.codepoint__utf-8 > .code-unit--alternate,
+			.codepoint__utf-16 > .code-unit--alternate {
 				background-color: #EEE;
 			}
 
@@ -127,10 +141,10 @@
 	<body>
 		<template id=grapheme>
 			<div class=grapheme>
-				<div class=grapheme__codepoints data-slot=codepoints>
+				<div class=grapheme__codepoints data-slot=codepoints></div>
+				<div class=grapheme__text-container>
+					<div class=grapheme__text data-slot=text>//?</div>
 				</div>
-
-				<div class=grapheme__text data-slot=text>//?</div>
 			</div>
 		</template>
 
