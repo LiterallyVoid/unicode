@@ -1,3 +1,8 @@
+# Unicode
+
+Separate text into graphemes, codepoints, UTF-16 code units, and UTF-8 code units. Delete individual codepoints to see how graphemes boil and shift, bending to your will.
+
+To store codepoint names, I wrote my own binary format. <https://github.com/LiterallyVoid/unicode-character-names-binary>
 
 # Licenses
 
