@@ -1,5 +1,14 @@
 /**
-@param {number[]} array
+ @typedef Range
+ @property {number} first - The first Unicode codepoint that this range contains
+ @property {number} last - The last Unicode codepoint that this range contains, inclusive
+ @property {"reserved" | "noncharacter" | "surrogate" | "character"} cls - This range's Unicode class
+ @property {string} age - The Unicode version that introduced every character in this range
+ @property {number} name_index - The index of a prefix tree node in this table's nametable.
+ */
+
+/**
+@param {Uint8Array | number[]} array
 @returns {[string, number]} The parsed ASCII high-bit-terminated string, and how long that string was in bytes.
 */
 function readVarAscii(array) {
@@ -21,7 +30,7 @@ function readVarAscii(array) {
 console.assert(readVarAscii([0x41, 0x42, 0x43, 0xC4]).toString() == "ABCD,4");
 
 /**
-@param {number[]} array
+@param {Uint8Array | number[]} array
 @returns {[number, number]} The parsed number, and how long that number was in bytes.
 */
 function readVarInt(array) {
@@ -73,21 +82,31 @@ export class Table {
 		}
 	}
 
+	/**
+	 @param {number} index - An index into this table's range list.
+	 @returns {Range} A range, parsed from the range's bits
+	 */
 	rangeInfo(index) {
+		const MASK_FIRST = 0x00FF_FFFF;
+
 		const bits = this.ranges[index * 2];
 		const name_index = this.ranges[index * 2 + 1];
 
-		const first = bits & 0x00FF_FFFF;
-		const next_first = (this.ranges[index * 2 + 2] ?? (0x10FFFF + 1)) & 0x00FF_FFFF;
+		const first = bits & MASK_FIRST;
+
+		let next_first = 0x10_FFFF + 1;
+		if ((index * 2 + 2) < this.ranges.length) {
+			next_first = this.ranges[index * 2 + 2] & MASK_FIRST;
+		}
 		const last = next_first - 1;
 
 		const class_index = (bits >> 24) & 0x3;
-		const cls = [
+		const cls = /** @type {const} */([
 			"reserved",
 			"noncharacter",
 			"surrogate",
 			"character",
-		][class_index];
+		])[class_index];
 
 		const age_index = (bits >> 26);
 		const age = this.ages[age_index];
@@ -101,6 +120,10 @@ export class Table {
 		};
 	}
 
+	/**
+	 @param {number} codepoint
+	 @returns {Range}
+	 */
 	searchRanges(codepoint) {
 		let lo = 0;
 		let hi = this.ranges.length / 2;
