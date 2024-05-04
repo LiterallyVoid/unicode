@@ -401,7 +401,7 @@ input.addEventListener("input", () => {
 
 renderAll();
 
-loadArrayBuffer("ucd.bin", progress => {
+loadArrayBuffer("data/ucd.bin", progress => {
 	// console.log(progress);
 })
 	.then((buffer) => {
