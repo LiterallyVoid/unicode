@@ -19,7 +19,11 @@
 		<template id=table-footer>
 			<div class=table-footer>
 				<div class=table-footer__utf-8 data-slot=utf-8-bytes>26</div>
-				<div class=table-footer__utf-16 data-slot=utf-16-units>12</div>
+				<div class=table-footer__utf-16>
+					<span data-slot=utf-16-units>12</span>
+					/
+					<span data-slot=utf-16-bytes>24</span>b
+				</div>
 				<div class=table-footer__codepoint data-slot=codepoints>9</div>
 				<div class=table-footer__grapheme data-slot=graphemes>3</div>
 			</div>

@@ -120,10 +120,15 @@ function render({ value, target, onDeleteRange }) {
 
 	footer.querySelector("[data-slot=utf-8-bytes]").textContent =
 		utf_8_index.toLocaleString();
+
 	footer.querySelector("[data-slot=utf-16-units]").textContent =
 		utf_16_index.toLocaleString();
+	footer.querySelector("[data-slot=utf-16-bytes]").textContent =
+		(utf_16_index * 2).toLocaleString();
+
 	footer.querySelector("[data-slot=codepoints]").textContent =
 		codepoint_index.toLocaleString();
+
 	footer.querySelector("[data-slot=graphemes]").textContent =
 		grapheme_index.toLocaleString();
 
