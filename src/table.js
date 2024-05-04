@@ -70,7 +70,7 @@ export class Table {
 		// Verify version
 		console.assert(this.as_u32[2] == 2);
 
-		this.trie_bytes = new Uint8Array(this.data, this.as_u32[3], this.as_u32[4]);
+		this.nametable = new Uint8Array(this.data, this.as_u32[3], this.as_u32[4]);
 		const ages_bytes = new Uint8Array(this.data, this.as_u32[5], this.as_u32[6]);
 		this.ranges = new Uint32Array(this.data, this.as_u32[7], this.as_u32[8] / 4);
 
@@ -121,26 +121,48 @@ export class Table {
 	}
 
 	/**
+	 Binary search for the range that contains Unicode codepoint `codepoint`.
+	 A table's ranges cover the Unicode range (0x0..0x10_FFFF) are stored in order with no overlap, by construction.
+
 	 @param {number} codepoint
 	 @returns {Range}
 	 */
-	searchRanges(codepoint) {
+	findRangeContainingCodepoint(codepoint) {
+		// The range index we're looking for is in 0..<ranges_count
+		// Each range is two 32-bit integers in the `Uint32Array` of `this.ranges`; divide by two to calculate range count from integer count.
+		const ranges_count = this.ranges.length / 2;
+
+		// (The names `lo` and `hi` were chosen so they're the same length in-code.)
+
+		// The codepoint range we're looking for has an index somewhere in `0..<ranges_count`. We'll shrink this down to a single index (of a codepoint range) with a binary search.
+		// We'll encode the search range as `lo..<hi`
 		let lo = 0;
-		let hi = this.ranges.length / 2;
+		let hi = ranges_count;
 
 		while (lo != hi) {
-			const mid_index = Math.floor((lo + hi) / 2);
-			const mid_range = this.rangeInfo(mid_index);
+			const mid = Math.floor((lo + hi) / 2);
+			const mid_range = this.rangeInfo(mid);
+
+			// `mid` splits the search range into three regions:
+			//  * `lo..<mid`, all codepoint ranges before `mid`
+			//  * `mid..<(mid + 1)`, the search range of exactly the codepoint range indexed `mid` and no other codepoint ranges.
+			//  * `(mid + 1)..<hi`, all codepoint ranges after `mid`
 
 			if (codepoint > mid_range.last) {
-				lo = mid_index + 1;
+				// The range we're looking for is definitely in the third region,
+				// so update our range to `(mid + 1)..<hi`, to cut off the other two regions.
+				lo = mid + 1;
 			} else if (codepoint < mid_range.first) {
-				hi = mid_index;
+				// The range we're looking for is definitely in the first region,
+				// so update our range to `lo..<mid` (note: exclusive!)
+				hi = mid;
 			} else {
+				// The codepoint range at `mid` contains the codepoint in question; return it!
 				return mid_range;
 			}
 		}
 
+		// `lo` and `hi` are equal, so it doesn't matter which one.
 		return this.rangeInfo(lo);
 	}
 
@@ -148,24 +170,50 @@ export class Table {
 	@param {number} index
 	@returns {string} A string read from the trie.
 	*/
-	readTrie(index) {
-		if (index === 0) return "";
+	readName(index) {
+		if (index <= 0) return "";
 
-		const [prefix_offset, prefix_offset_length] = readVarInt(this.trie_bytes.subarray(index));
-		const [suffix, _] = readVarAscii(this.trie_bytes.subarray(index + prefix_offset_length));
+		let cursor = index;
 
-		console.assert(prefix_offset > 0);
-		if (!(prefix_offset > 0)) throw new Error();
+		const [prefix_offset, prefix_offset_length] =
+			readVarInt(this.nametable.subarray(cursor));
+		cursor += prefix_offset_length;
 
-		return this.readTrie(index - prefix_offset) + suffix;
+		const [suffix, suffix_length] =
+			readVarAscii(this.nametable.subarray(cursor));
+		cursor += suffix_length;
+
+		// The verification here should be kept in sync with `check.py` from the `UCDNAMES` builder.
+
+		// A suffix of length zero is pointless. Let's raise an error.
+		if (suffix.length <= 0) {
+			throw new Error("nametable has zero-length suffix");
+		}
+
+		// If prefix_offset is `0`, this name would have an infinite loop.
+		// And if `prefix_offset > index`, this name would have a prefix of less than zero, which is simply not well-formed.
+		if (prefix_offset < 1 || prefix_offset > index) {
+			throw new Error();
+		}
+
+		const prefix = this.readName(index - prefix_offset);
+
+		// Codepoint names shouldn't be too long. If they are, something's probably gone wrong.
+		// Note that this check is *after* the recursion happens, on the way up, so it's pretty much pointless, as a long chain would overflow the stack before reaching here. But sanity checks are valuable anyway.
+		if (prefix.length + suffix.length > 200) {
+			throw new Error("name is too long!");
+		}
+
+		return prefix + suffix;
 	}
 
 	/**
+	Get the name of Unicode codepoint `codepoint`.
 	@param {number} codepoint
-	@returns {string}
+	@returns {string} The name of codepoint `codepoint`.
 	*/
 	codepointName(codepoint) {
-		const range = this.searchRanges(codepoint);
-		return this.readTrie(range.name_index);
+		const range = this.findRangeContainingCodepoint(codepoint);
+		return this.readName(range.name_index);
 	}
 }
