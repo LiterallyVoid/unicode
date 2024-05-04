@@ -2,21 +2,64 @@
 <html lang=en>
 	<head>
 		<meta charset=utf-8>
+		<meta name=viewport content="width=device-width,initial-scale=1">
 		<title>Unicode</title>
 		<style>
 			:root {
-				font: 150%/1 Inter, sans-serif;
+				font: 120%/1 Inter, sans-serif;
 			}
+
+			body {
+				max-width: 30em;
+				margin: auto;
+
+				display: flex;
+				flex-direction: column;
+			}
+
+			input {
+				align-self: stretch;
+
+				font: inherit;
+
+				margin: 1rem;
+				padding: 0.3rem;
+
+				border: 1px solid rgba(0, 0, 0, 20%);
+				border-radius: 5px;
+			}
+
 			.vis {
 				display: grid;
 
 				grid-auto-flow: row;
 
-				grid-template-columns: [utf-8] max-content [utf-16] max-content [codepoint] 15em [grapheme] max-content;
+				grid-template-columns: [utf-8] max-content [utf-16] max-content [codepoint] 1fr [grapheme] max-content;
 				grid-auto-rows: max-content;
 
-				overflow-x: auto;
+				margin-bottom: 30em;
+
+				gap: 0 0.2em;
 			}
+
+			.table-header {
+				grid-column: 1 / -1;
+
+				display: grid;
+				grid-template-columns: subgrid;
+
+				position: sticky;
+				top: 0;
+
+				background-color: #FFF;
+
+				border-bottom: 1px solid rgba(0, 0, 0, 20%);
+			}
+
+			.table-header > div {
+				padding: 0.6rem 0.3rem;
+			}
+
 
 			.grapheme {
 				grid-column: 1 / -1;
@@ -50,7 +93,9 @@
 			}
 
 			.grapheme__text {
-				font-size: 250%;
+				font-size: 180%;
+				line-height: 1.6;
+				margin: 0 0.8em;
 			}
 
 			/* Every other grapheme has a shaded background. */
@@ -82,19 +127,17 @@
 
 			.codepoint__utf-8 > div,
 			.codepoint__utf-16 > div {
+				align-self: stretch;
+				justify-self: stretch;
 				flex: 1;
 
-				font-size: 70%;
+				padding: 0.3rem;
 
-				padding: 0 0.2em;
+				text-align: center;
 
 				display: flex;
-			}
-
-			.codepoint__utf-8 > div > span,
-			.codepoint__utf-16 > div > span {
-				align-self: center;
-				justify-self: center;
+				align-items: center;
+				justify-content: center;
 
 				font-family: monospace;
 			}
@@ -105,8 +148,37 @@
 				background-color: #EEE;
 			}
 
+			.code-unit--utf8-continuation {
+				color: #808;
+			}
+
+			.code-unit--utf8-start-mb2 {
+				color: #B00;
+			}
+
+			.code-unit--utf8-start-mb3 {
+				color: #090;
+			}
+
+			.code-unit--utf8-start-mb4 {
+				color: #00B;
+			}
+
+			.code-unit--utf16-high-surrogate {
+				color: #B00;
+			}
+
+			.code-unit--utf16-low-surrogate {
+				color: #00B;
+			}
+
 			.codepoint__description {
-				padding: 0.5em;
+				padding: 0.3rem;
+
+				display: flex;
+				flex-direction: column;
+
+				gap: 0.3rem;
 			}
 
 			/* Every other codepoint has a shaded background. */
@@ -134,11 +206,50 @@
 				grid-row: codepoint-name;
 				grid-column: 1 / -1;
 
-				font-size: 50%;
+				font-size: 70%;
+			}
+
+			.codepoint__actions {
+				flex: 1;
+				align-self: end;
+
+				display: flex;
+				align-items: end;
+				justify-content: end;
+
+				gap: 0.3rem;
+			}
+
+			.codepoint__actions button {
+				border-radius: 3px;
+				background: none;
+
+				color: #000;
+
+				cursor: pointer;
+
+				aspect-ratio: 1 / 1;
+			}
+
+			.codepoint__insert {
+				border: 1px solid #36F;
+			}
+
+			.codepoint__delete {
+				border: 1px solid #F33;
 			}
 		</style>
 	</head>
 	<body>
+		<template id=table-header>
+			<div class=table-header>
+				<div class=table-header__utf-8>UTF-8</div>
+				<div class=table-header__utf-16>UTF-16</div>
+				<div class=table-header__codepoint>Codepoint</div>
+				<div class=table-header__grapheme>Grapheme</div>
+			</div>
+		</template>
+
 		<template id=grapheme>
 			<div class=grapheme>
 				<div class=grapheme__codepoints data-slot=codepoints></div>
@@ -155,11 +266,18 @@
 				<div class=codepoint__description>
 					<div class=codepoint__id>U+<span class=codepoint__number data-slot=number>FEFF</span></div>
 					<div class=codepoint__name data-slot=name>REPLACEMENT CHARACTER</div>
+
+					<div class=codepoint__actions>
+						<button class=codepoint__insert data-action=insert>+</button>
+						<button class=codepoint__delete data-action=delete>×</button>
+					</div>
 				</div>
 			</div>
 		</template>
 
-		<input id=main-text-input value=❤️ />
+		<p style="line-height: 1.6">Normalization? <em><a href="#N%C3%B6t%20o%CC%88n">Nöt ön</a> my watch.</em> Flags <a href="http://10.2.0.10:1041/#%F0%9F%87%AA%F0%9F%87%B8%F0%9F%87%BA%F0%9F%87%B3%F0%9F%87%A6%F0%9F%87%B6">🇪🇸🇺🇳🇦🇶</a> are just regional indicators smushed into one another. This heart’s <a href="#%E2%9D%A4%EF%B8%8F">❤️</a> of two, but that <a href="#%F0%9F%A9%B7">🩷</a> one? Just one.</p>
+
+		<input id=main-text-input value="🤷‍♀️ ❤️💚💙 🏳️‍🌈 ö o&#x308;">
 
 		<div id=visualization class=vis>
 			<div class=grapheme>

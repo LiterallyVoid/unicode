@@ -133,12 +133,10 @@ class Table {
 		let lo = 0;
 		let hi = this.ranges.length / 2;
 
-		console.log(codepoint);
-
 		while (lo != hi) {
 			const mid_index = Math.floor((lo + hi) / 2);
 			const mid_range = this.rangeInfo(mid_index);
-			console.log(`${lo}..${hi} mid: ${mid_index} codepoint: ${codepoint} mid: ${mid_range.first}..${mid_range.last + 1}`);
+
 			if (codepoint > mid_range.last) {
 				lo = mid_index + 1;
 			} else if (codepoint < mid_range.first) {
@@ -173,23 +171,17 @@ class Table {
 	*/
 	codepointName(codepoint) {
 		const range = this.searchRanges(codepoint);
-		console.log(range);
 		return this.readTrie(range.name_index);
 	}
 }
 
 let table = null;
-loadArrayBuffer("tables/ucd.bin", progress => {
-	console.log(progress);
-})
-	.then((buffer) => {
-		table = new Table(buffer);
-	});
 
 const input = document.querySelector("#main-text-input");
 const visualization = document.querySelector("#visualization");
 
 const templates = {
+	table_header: document.querySelector("#table-header"),
 	grapheme: document.querySelector("#grapheme"),
 	codepoint: document.querySelector("#codepoint"),
 };
@@ -227,7 +219,7 @@ function codepointUtf8Units(codepoint) {
 }
 
 {
-	const cases = ["x", "£", "И", "€", "𐍈"];
+	const cases = ["x", "£", "И", "€", "𐍈", "\u{1F3AE}"];
 
 	for (const test_case of cases) {
 		const codepoint = test_case.codePointAt(0);
@@ -260,13 +252,13 @@ function codepointUtf16Units(codepoint) {
 
 {
 	const cases = [
-		["$", [0x20AC]],
+		["€", [0x20AC]],
 		["𐐷", [0xD801, 0xDC37]],
 	];
 
 	for (const [test_case, ground_truth] of cases) {
 		const codepoint = test_case.codePointAt(0);
-		const under_test = codepointUtf8Units(codepoint);
+		const under_test = codepointUtf16Units(codepoint);
 
 		console.assert(under_test.length === ground_truth.length);
 
@@ -291,14 +283,18 @@ function segmentGraphemes(string) {
  @param {HTMLElement} target
  */
 function render(string, target) {
-	console.log("Rendering", string, "to", target);
-
 	let grapheme_index = 0;
 	let codepoint_index = 0;
 	let utf_16_index = 0;
 	let utf_8_index = 0;
 
+	// Remove all elements from `target`.
 	target.textContent = "";
+
+	target.appendChild(templates.table_header.content.cloneNode(true));
+
+	let character_index = 0;
+
 	for (const grapheme of segmentGraphemes(string)) {
 		const grapheme_element = templates.grapheme.content.cloneNode(true);
 
@@ -333,6 +329,12 @@ function render(string, target) {
 					container.classList.add("code-unit--alternate");
 				}
 
+				if (unit >= 0xD800 && unit <= 0xDBFF) {
+					container.classList.add("code-unit--utf16-high-surrogate");
+				} else if (unit >= 0xDC00 && unit < 0xDFFF) {
+					container.classList.add("code-unit--utf16-low-surrogate");
+				}
+
 				unit_element.textContent = unit.toString(16).toUpperCase().padStart(4, "0");
 
 				codepoint_element.querySelector("[data-slot=utf-16]").appendChild(container);
@@ -347,10 +349,32 @@ function render(string, target) {
 					container.classList.add("code-unit--alternate");
 				}
 
+				if (unit >= 0x80 && unit <= 0xBF) {
+					container.classList.add("code-unit--utf8-continuation");
+				} else if (unit >= 0xC0 && unit <= 0xDF) {
+					container.classList.add("code-unit--utf8-start-mb2");
+				} else if (unit >= 0xE0 && unit <= 0xEF) {
+					container.classList.add("code-unit--utf8-start-mb3");
+				} else if (unit >= 0xF0 && unit <= 0xF7) {
+					container.classList.add("code-unit--utf8-start-mb4");
+				}
+
 				unit_element.textContent = unit.toString(16).toUpperCase().padStart(2, "0");
 
 				codepoint_element.querySelector("[data-slot=utf-8]").appendChild(container);
 			}
+
+			const delete_index = character_index;
+			const delete_length = codepoint.length;
+			codepoint_element.querySelector("[data-action=delete]").addEventListener("click", () => {
+				input.value =
+					input.value.substr(0, delete_index) +
+					input.value.substr(delete_index + delete_length);
+
+				userDidChangeInput();
+			});
+
+			character_index += codepoint.length;
 
 			grapheme_element.querySelector("[data-slot=codepoints]").appendChild(codepoint_element);
 		}
@@ -363,8 +387,45 @@ function renderAll() {
 	render(input.value, visualization);
 }
 
-input.addEventListener("input", () => {
+let ignore_hash_change_if_equal_to = null;
+// NOT called when the input's changed by the hash changing.
+function userDidChangeInput() {
+	window.location.hash = "#" + encodeURIComponent(input.value);
+	ignore_hash_change_if_equal_to = window.location.hash;
 	renderAll();
+}
+
+input.addEventListener("input", () => {
+	userDidChangeInput();
 });
 
 renderAll();
+
+loadArrayBuffer("tables/ucd.bin", progress => {
+	// console.log(progress);
+})
+	.then((buffer) => {
+		table = new Table(buffer);
+		renderAll();
+	});
+
+function updateInputFromWindowHash() {
+	if (!window.location.hash || window.location.hash.length < 1) {
+		return;
+	}
+
+	if (window.location.hash === ignore_hash_change_if_equal_to) {
+		ignore_hash_change_if_equal_to = null;
+		return;
+	}
+
+	// Setting `input.value` doesn't trigger the input's `input` event, right?
+	input.value = decodeURIComponent(window.location.hash.substring(1));
+	renderAll();
+
+}
+
+window.addEventListener("hashchange", (_) => {
+	updateInputFromWindowHash();
+});
+updateInputFromWindowHash();
