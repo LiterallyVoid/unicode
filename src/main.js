@@ -2,6 +2,7 @@ import { Table } from "./table.js";
 import { input, visualization, templates } from "./app-document.js";
 import { codepointUtf8Units, codepointUtf16Units, segmentGraphemes } from "./segment.js";
 import { loadArrayBuffer } from "./network.js";
+import { table_load_bar } from "./app-document.js";
 
 /** @type {Table | null} */
 let table = null;
@@ -187,10 +188,21 @@ input.addEventListener("input", () => {
 renderAll();
 
 loadArrayBuffer("data/ucd.bin", progress => {
-	// console.log(progress);
+	table_load_bar.value = progress;
 })
 	.then((buffer) => {
+		table_load_bar.classList.add("table-load-bar--done");
+		table_load_bar.ariaLabel = "Codepoint table loaded";
+
+		// Hide the element after one second.
+		// This should make it invisible to accessibility tools.
+		setTimeout(() => {
+			table_load_bar.style.visibilty = "hidden";
+		}, 1000);
+
 		table = new Table(buffer);
 		renderAll();
+	})
+	.catch((_) => {
+		table_load_bar.ariaLabel = "Codepoint table failed to load";
 	});
-

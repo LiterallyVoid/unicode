@@ -250,6 +250,24 @@ input {
 
 p {
 	line-height: 1.6;
+
 	margin: 0 0.3rem;
+	margin-top: 1rem;
+}
+
+.table-load-bar {
+	display: block;
+	inline-size: auto;
+
+	align-self: stretch;
+
+	margin: 0 0.3rem;
+	margin-top: 1rem;
+
+	transition: opacity 1s ease;
+}
+
+.table-load-bar--done {
+	opacity: 0;
 }
 

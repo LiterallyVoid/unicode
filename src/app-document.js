@@ -3,6 +3,7 @@
  @typedef {
  S extends `input#${string}` ? HTMLInputElement :
  S extends `template#${string}` ? HTMLTemplateElement :
+ S extends `progress#${string}` ? HTMLProgressElement :
  HTMLElement
  } Node
  */
@@ -26,6 +27,8 @@ function query(selector) {
 
 export const input = query("input#main-text-input");
 export const visualization = query("#visualization");
+
+export const table_load_bar = query("progress#table-load-bar");
 
 export const templates = {
 	table_header: query("template#table-header"),
