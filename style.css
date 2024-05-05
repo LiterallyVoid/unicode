@@ -15,11 +15,11 @@ input {
 
 	font: inherit;
 
-	margin: 1rem;
+	margin: 0.3rem;
 	padding: 0.3rem;
 
 	border: 1px solid rgba(0, 0, 0, 20%);
-	border-radius: 5px;
+	border-radius: 8px;
 }
 
 .vis {
@@ -233,25 +233,38 @@ input {
 	border-radius: 3px;
 	background: none;
 
+	font-size: 70%;
+	font-weight: bold;
+
+	margin: 0;
+	padding: 0;
+
+	width: 1.3em;
+	height: 1.3em;
+
+	text-align: center;
+
 	cursor: pointer;
 
-	aspect-ratio: 1 / 1;
+	border: none;
+	background-color: rgba(0, 0, 0, 10%);
 }
 
 .codepoint__insert {
-	border: 1px solid #36F;
-	color: #36F;
+	color: #14E;
 }
 
 .codepoint__delete {
-	border: 1px solid #F33;
-	color: #F33;
+	color: #C11;
 }
 
 p {
 	line-height: 1.6;
 
 	margin: 0 0.3rem;
+}
+
+* + p {
 	margin-top: 1rem;
 }
 

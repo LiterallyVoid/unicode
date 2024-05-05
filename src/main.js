@@ -195,9 +195,9 @@ loadArrayBuffer("data/ucd.bin", progress => {
 		table_load_bar.ariaLabel = "Codepoint table loaded";
 
 		// Hide the element after one second.
-		// This should make it invisible to accessibility tools.
+		// It just feels *nice* to do this instead of just leaving opacity at zero,and this should make it invisible to the accessibility tree as well.
 		setTimeout(() => {
-			table_load_bar.style.visibilty = "hidden";
+			table_load_bar.style.visibility = "hidden";
 		}, 1000);
 
 		table = new Table(buffer);
